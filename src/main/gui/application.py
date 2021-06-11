@@ -3,9 +3,10 @@ import sys
 import tkinter as tk
 
 from tkinter import ttk
-from PIL import Image, ImageTk
 
 sys.path.append(os.path.dirname(os.path.abspath('__file__')))
+
+master = None
 
 
 class Application(tk.Tk):
@@ -13,42 +14,42 @@ class Application(tk.Tk):
 
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-        self.geometry('{}x{}'.format(1280, 720))
-        self.resizable(0, 0)
-
+        self.update_idletasks()
         self.wm_title("Analysis Parser&Processor (project: DofE 2021)")
-        self.wm_iconphoto(False, self.generate_new_bitmap())
+        # Center application to the middle of screen
+        self.geometry('{}x{}+{}+{}'.format(
+            360, 240,
+            int((self.winfo_screenwidth () / 2) - (360 / 2)),
+            int((self.winfo_screenheight() / 2) - (240 / 2))
+        ))
+        self.resizable(False, False)
+        import src.main.engine as engine
+        self.wm_iconphoto(False, engine.generate_new_icon())
         self.prepare_workspace()
 
+        """Code that will auto-destroy Tk from memory and will close application"""
+        self.bind('<Escape>', lambda event: self.exit())
+
     def prepare_workspace(self):
-        tab1 = ttk.Frame(self.tab_controller)
-        tab2 = ttk.Frame(self.tab_controller)
+        label_frame = tk.LabelFrame(self, text="General")
+        label_frame.config(font=('Helvetical bold', 20))
+        label_frame.pack(fill="both", expand="yes")
+        """LabelFrame packed"""
 
-        self.tab_controller.add(tab1, text='1')
-        self.tab_controller.add(tab2, text='2')
-        self.tab_controller.pack(expand=1, fill="both")
+        tk.Label      (label_frame, text="Test", justify=tk.LEFT)\
+            .grid(column=0, row=0, sticky=tk.W)
+        ttk.OptionMenu(label_frame, tk.StringVar(), "Scanners", {})\
+            .grid(column=1, row=0)
 
-    @staticmethod
-    def exit_program():
-        exit()
-
-    class MainContainer(tk.Frame):
-        def __init__(self):
-            tk.Frame.__init__()
-
-    '''Method used for generating window wm icon, so no external file is needed
-       TODO: Create better image in future
-    '''
-    @staticmethod
-    def generate_new_bitmap():
-        image = Image.new('RGB', (255, 255), "black")
-        pixel = image.load()
-        for i in range(image.size[0]):
-            for j in range(image.size[1]):
-                pixel[i, j] = (i, j, 100)
-        return ImageTk.PhotoImage(image)
+    def exit(self):
+        self.destroy()
+        pass
 
 
 def run():
-    application = Application()
-    application.mainloop()
+    global master
+    if master:
+        master.mainloop()
+    else:
+        master = Application()
+        master.mainloop()
